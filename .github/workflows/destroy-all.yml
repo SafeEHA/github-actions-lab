@@ -13,6 +13,32 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
+  # Destroy the original demo bucket from Lab 1
+  destroy-demo:
+    name: Destroy Demo (Lab 1)
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'destroy'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Restore Demo State
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            terraform.tfstate
+            terraform.tfstate.backup
+            .terraform
+          key: terraform-state-${{ github.repository }}
+        continue-on-error: true
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy Demo
+        run: terraform destroy -auto-approve
+        continue-on-error: true
+
   destroy-staging:
     name: Destroy Staging
     runs-on: ubuntu-latest
